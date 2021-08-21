@@ -14,10 +14,22 @@ namespace FairPlayTube.DataAccess.Models
     {
         public ApplicationUser()
         {
+            ApplicationUserFeature = new HashSet<ApplicationUserFeature>();
             Brand = new HashSet<Brand>();
+            PaypalTransaction = new HashSet<PaypalTransaction>();
             UserExternalMonetization = new HashSet<UserExternalMonetization>();
             UserFeedback = new HashSet<UserFeedback>();
+            UserFollowerFollowedApplicationUser = new HashSet<UserFollower>();
+            UserFollowerFollowerApplicationUser = new HashSet<UserFollower>();
+            UserInvitation = new HashSet<UserInvitation>();
+            UserMessageFromApplicationUser = new HashSet<UserMessage>();
+            UserMessageToApplicationUser = new HashSet<UserMessage>();
+            UserProfile = new HashSet<UserProfile>();
+            VideoAccessTransaction = new HashSet<VideoAccessTransaction>();
+            VideoComment = new HashSet<VideoComment>();
             VideoInfo = new HashSet<VideoInfo>();
+            VideoJobApplication = new HashSet<VideoJobApplication>();
+            VisitorTracking = new HashSet<VisitorTracking>();
         }
 
         [Key]
@@ -37,12 +49,38 @@ namespace FairPlayTube.DataAccess.Models
         [InverseProperty("ApplicationUser")]
         public virtual ApplicationUserRole ApplicationUserRole { get; set; }
         [InverseProperty("ApplicationUser")]
+        public virtual UserVideoRating UserVideoRating { get; set; }
+        [InverseProperty("ApplicationUser")]
+        public virtual ICollection<ApplicationUserFeature> ApplicationUserFeature { get; set; }
+        [InverseProperty("ApplicationUser")]
         public virtual ICollection<Brand> Brand { get; set; }
+        [InverseProperty("ApplicationUser")]
+        public virtual ICollection<PaypalTransaction> PaypalTransaction { get; set; }
         [InverseProperty("ApplicationUser")]
         public virtual ICollection<UserExternalMonetization> UserExternalMonetization { get; set; }
         [InverseProperty("ApplicationUser")]
         public virtual ICollection<UserFeedback> UserFeedback { get; set; }
+        [InverseProperty(nameof(UserFollower.FollowedApplicationUser))]
+        public virtual ICollection<UserFollower> UserFollowerFollowedApplicationUser { get; set; }
+        [InverseProperty(nameof(UserFollower.FollowerApplicationUser))]
+        public virtual ICollection<UserFollower> UserFollowerFollowerApplicationUser { get; set; }
+        [InverseProperty("InvitingApplicationUser")]
+        public virtual ICollection<UserInvitation> UserInvitation { get; set; }
+        [InverseProperty(nameof(UserMessage.FromApplicationUser))]
+        public virtual ICollection<UserMessage> UserMessageFromApplicationUser { get; set; }
+        [InverseProperty(nameof(UserMessage.ToApplicationUser))]
+        public virtual ICollection<UserMessage> UserMessageToApplicationUser { get; set; }
+        [InverseProperty("ApplicationUser")]
+        public virtual ICollection<UserProfile> UserProfile { get; set; }
+        [InverseProperty("BuyerApplicationUser")]
+        public virtual ICollection<VideoAccessTransaction> VideoAccessTransaction { get; set; }
+        [InverseProperty("ApplicationUser")]
+        public virtual ICollection<VideoComment> VideoComment { get; set; }
         [InverseProperty("ApplicationUser")]
         public virtual ICollection<VideoInfo> VideoInfo { get; set; }
+        [InverseProperty("ApplicantApplicationUser")]
+        public virtual ICollection<VideoJobApplication> VideoJobApplication { get; set; }
+        [InverseProperty("ApplicationUser")]
+        public virtual ICollection<VisitorTracking> VisitorTracking { get; set; }
     }
 }

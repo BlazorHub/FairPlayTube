@@ -3,73 +3,101 @@ using FairPlayTube.Common.Interfaces;
 using FairPlayTube.CustomProviders;
 using FairPlayTube.DataAccess.Data;
 using FairPlayTube.DataAccess.Models;
-using FairPlayTube.Models;
+using FairPlayTube.GatedFeatures.FeatureFilters;
 using FairPlayTube.Models.CustomHttpResponse;
 using FairPlayTube.Notifications.Hubs;
 using FairPlayTube.Services;
 using FairPlayTube.Services.BackgroundServices;
+using FairPlayTube.Services.Configuration;
 using FairPlayTube.Swagger.Filters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.FeatureManagement;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using PTI.Microservices.Library.Configuration;
 using PTI.Microservices.Library.Interceptors;
 using PTI.Microservices.Library.Services;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace FairPlayTube
 {
+    /// <summary>
+    /// Used to configure system's startup
+    /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Initialized <see cref="Startup"/>
+        /// </summary>
+        /// <param name="configuration"></param>
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
+        /// <summary>
+        /// Represents the system's initial/startup configuration
+        /// </summary>
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        /// <summary>
+        /// Configures the System Services
+        /// </summary>
+        /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
-            GlobalPackageConfiguration.EnableHttpRequestInformationLog = false;
+            bool enablePTILibrariesLogging = Convert.ToBoolean(Configuration["EnablePTILibrariesLogging"]);
+            GlobalPackageConfiguration.EnableHttpRequestInformationLog = enablePTILibrariesLogging;
             GlobalPackageConfiguration.RapidApiKey = Configuration.GetValue<string>("RapidApiKey");
+            services.AddSignalR();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
-            services.AddScoped(serviceProvider =>
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddTransient<ICurrentUserProvider, CurrentUserProvider>();
+            services.AddTransient(serviceProvider =>
             {
                 var fairplaytubeDatabaseContext = this.CreateFairPlayTubeDbContext(services);
                 return fairplaytubeDatabaseContext;
             });
 
 
-            services.AddScoped<CustomHttpClientHandler>();
-            services.AddScoped<CustomHttpClient>();
-
+            services.AddTransient<CustomHttpClientHandler>();
+            services.AddTransient<CustomHttpClient>(sp =>
+            {
+                var handler = sp.GetRequiredService<CustomHttpClientHandler>();
+                return new CustomHttpClient(handler) { Timeout = TimeSpan.FromMinutes(30) };
+            });
+            ConfigureAzureTextAnalytics(services);
+            ConfigureAzureContentModerator(services);
             ConfigureAzureVideoIndexer(services);
             ConfigureAzureBlobStorage(services);
+            ConfigureDataStorage(services);
+            ConfigurePayPal(services);
+            ConfigureIpStackService(services);
 
-            DataStorageConfiguration dataStorageConfiguration =
-                Configuration.GetSection("DataStorageConfiguration").Get<DataStorageConfiguration>();
-            services.AddSingleton(dataStorageConfiguration);
-
-            services.AddScoped<VideoService>();
+            var smtpConfiguration = Configuration.GetSection(nameof(SmtpConfiguration)).Get<SmtpConfiguration>();
+            services.AddSingleton(smtpConfiguration);
+            AddPlatformServices(services);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
@@ -162,28 +190,98 @@ namespace FairPlayTube
                 var azureAdB2CClientAppClientId = Configuration["AzureAdB2C:ClientAppClientId"];
                 var azureAdB2ClientAppDefaultScope = Configuration["AzureAdB2C:ClientAppDefaultScope"];
                 services.AddSwaggerGen(c =>
-               {
-                   c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "FairPlayTube API" });
-                   c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-                   {
-                       Type = SecuritySchemeType.OAuth2,
-                       Flows = new OpenApiOAuthFlows()
-                       {
-                           Implicit = new OpenApiOAuthFlow()
-                           {
-                               AuthorizationUrl = new Uri($"{azureAdB2CInstance}/{azureAdB2CDomain}/oauth2/v2.0/authorize"),
-                               TokenUrl = new Uri($"{azureAdB2CInstance}/{azureAdB2CDomain}/oauth2/v2.0/token"),
-                               Scopes = new Dictionary<string, string>
+                {
+                    var basePath = AppContext.BaseDirectory;
+                    var mainAppXmlFilename = typeof(Startup).GetTypeInfo().Assembly.GetName().Name + ".xml";
+                    var modelsFileName = typeof(FairPlayTube.Models.Video.VideoInfoModel).Assembly.GetName().Name + ".xml";
+                    var mainAppXmlPath = Path.Combine(basePath, mainAppXmlFilename);
+                    var modelsXmlPath = Path.Combine(basePath, modelsFileName);
+                    c.IncludeXmlComments(mainAppXmlPath);
+                    c.IncludeXmlComments(modelsXmlPath);
+                    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "FairPlayTube API" });
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                    {
+                        Type = SecuritySchemeType.OAuth2,
+                        Flows = new OpenApiOAuthFlows()
+                        {
+                            Implicit = new OpenApiOAuthFlow()
+                            {
+                                AuthorizationUrl = new Uri($"{azureAdB2CInstance}/{azureAdB2CDomain}/oauth2/v2.0/authorize"),
+                                TokenUrl = new Uri($"{azureAdB2CInstance}/{azureAdB2CDomain}/oauth2/v2.0/token"),
+                                Scopes = new Dictionary<string, string>
                                {
                                {azureAdB2ClientAppDefaultScope, "Access APIs" }
                                }
-                           },
-                       }
-                   });
-                   c.OperationFilter<SecurityRequirementsOperationFilter>();
-               });
+                            },
+                        }
+                    });
+                    c.OperationFilter<SecurityRequirementsOperationFilter>();
+                });
             }
+            services.AddFeatureManagement()
+                .AddFeatureFilter<PaidFeatureFilter>()
+                .UseDisabledFeaturesHandler((features, context) =>
+                {
+                    string joinedFeaturesNames = String.Join(",", features);
+                    context.Result = new ObjectResult($"Missing features: {joinedFeaturesNames}")
+                    {
+                        StatusCode = (int)System.Net.HttpStatusCode.Forbidden
+                    };
+                });
+        }
 
+        private void ConfigureAzureTextAnalytics(IServiceCollection services)
+        {
+            AzureTextAnalyticsConfiguration azureTextAnalyticsConfiguration =
+                            Configuration.GetSection(nameof(AzureTextAnalyticsConfiguration))
+                            .Get<AzureTextAnalyticsConfiguration>();
+            services.AddSingleton(azureTextAnalyticsConfiguration);
+            services.AddTransient<AzureTextAnalyticsService>();
+        }
+
+        private static void AddPlatformServices(IServiceCollection services)
+        {
+            services.AddTransient<EmailService>();
+            services.AddTransient<VideoService>();
+            services.AddTransient<PaymentService>();
+            services.AddTransient<VisitorTrackingService>();
+            services.AddTransient<MessageService>();
+            services.AddTransient<ContentModerationService>();
+            services.AddTransient<TextAnalysisServices>();
+            services.AddTransient<UserService>();
+        }
+
+        private void ConfigureAzureContentModerator(IServiceCollection services)
+        {
+            AzureContentModeratorConfiguration azureContentModeratorConfiguration =
+                            Configuration.GetSection(nameof(AzureContentModeratorConfiguration))
+                            .Get<AzureContentModeratorConfiguration>();
+            services.AddSingleton(azureContentModeratorConfiguration);
+            services.AddTransient<AzureContentModeratorService>();
+        }
+
+        private void ConfigureIpStackService(IServiceCollection services)
+        {
+            IpStackConfiguration ipStackConfiguration =
+                            Configuration.GetSection(nameof(IpStackConfiguration))
+                            .Get<IpStackConfiguration>();
+            services.AddSingleton(ipStackConfiguration);
+            services.AddTransient<IpStackService>();
+        }
+
+        private void ConfigurePayPal(IServiceCollection services)
+        {
+            PaypalConfiguration paypalConfiguration = Configuration.GetSection(nameof(PaypalConfiguration))
+                            .Get<PaypalConfiguration>();
+            services.AddSingleton(paypalConfiguration);
+            services.AddTransient<PaypalService>();
+        }
+
+        private void ConfigureDataStorage(IServiceCollection services)
+        {
+            DataStorageConfiguration dataStorageConfiguration =
+                            Configuration.GetSection("DataStorageConfiguration").Get<DataStorageConfiguration>();
+            services.AddSingleton(dataStorageConfiguration);
         }
 
         private void ConfigureAzureVideoIndexer(IServiceCollection services)
@@ -192,7 +290,7 @@ namespace FairPlayTube
                 Configuration.GetSection($"AzureConfiguration:{nameof(AzureVideoIndexerConfiguration)}")
                 .Get<AzureVideoIndexerConfiguration>();
             services.AddSingleton(azureVideoIndexerConfiguration);
-            services.AddScoped<AzureVideoIndexerService>();
+            services.AddTransient<AzureVideoIndexerService>();
         }
 
         private void ConfigureAzureBlobStorage(IServiceCollection services)
@@ -201,10 +299,22 @@ namespace FairPlayTube
                 Configuration.GetSection($"AzureConfiguration:{nameof(AzureBlobStorageConfiguration)}")
                 .Get<AzureBlobStorageConfiguration>();
             services.AddSingleton(azureBlobStorageConfiguration);
-            services.AddScoped<AzureBlobStorageService>();
+            services.AddTransient<AzureBlobStorageService>(sp =>
+            {
+                CustomHttpClient customHttpClient = sp.GetRequiredService<CustomHttpClient>();
+                customHttpClient.Timeout = TimeSpan.FromMinutes(60);
+                return new AzureBlobStorageService(logger: sp.GetRequiredService<ILogger<AzureBlobStorageService>>(),
+                    azureBlobStorageConfiguration: azureBlobStorageConfiguration,
+                    customHttpClient: customHttpClient);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// Configure the Application Behavior and pipleline execution
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseResponseCompression();
@@ -273,6 +383,7 @@ namespace FairPlayTube
             //For MAUI in .NET 6 preview 4 using HTTPs is not working
             if (useHttpsRedirection)
                 app.UseHttpsRedirection();
+
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
@@ -286,7 +397,10 @@ namespace FairPlayTube
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapHub<NotificationHub>(Common.Global.Constants.Hubs.NotificationHub);
-                endpoints.MapFallbackToFile("index.html");
+                if (env.IsProduction())
+                    endpoints.MapFallbackToFile("index.html");
+                else
+                    endpoints.MapFallbackToFile("index.Development.html");
             });
         }
 
@@ -307,12 +421,99 @@ namespace FairPlayTube
         {
             DbContextOptionsBuilder<FairplaytubeDatabaseContext> dbContextOptionsBuilder =
                 new();
-            FairplaytubeDatabaseContext fairplaytubeDatabaseContext =
-            new(dbContextOptionsBuilder.UseSqlServer(Configuration.GetConnectionString("Default"),
+            bool useInMemoryDatabase = Convert.ToBoolean(Configuration["UseInMemoryDatabase"]);
+            if (useInMemoryDatabase)
+            {
+                dbContextOptionsBuilder =
+                    dbContextOptionsBuilder.UseInMemoryDatabase("FairPlayTubeInMemoryDb");
+            }
+            else
+            {
+                dbContextOptionsBuilder =
+                    dbContextOptionsBuilder.UseSqlServer(Configuration.GetConnectionString("Default"),
             sqlServerOptionsAction: (serverOptions) => serverOptions
-            .EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null)).Options,
-            currentUserProvider);
+            .EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null));
+            }
+            FairplaytubeDatabaseContext fairplaytubeDatabaseContext =
+            new(dbContextOptionsBuilder.Options, currentUserProvider);
+            if (useInMemoryDatabase)
+            {
+                ConfigureInMemoryDatabase(fairplaytubeDatabaseContext);
+            }
             return fairplaytubeDatabaseContext;
+        }
+
+        private void ConfigureInMemoryDatabase(FairplaytubeDatabaseContext fairplaytubeDatabaseContext)
+        {
+            fairplaytubeDatabaseContext.Database.EnsureCreated();
+            SeedDefaultRoles(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                roleId: 1, roleName: Common.Global.Constants.Roles.User);
+            SeedDefaultRoles(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                roleId: 2, roleName: Common.Global.Constants.Roles.Admin);
+            fairplaytubeDatabaseContext.SaveChanges();
+            SeedDefaultVideoIndexStatuses(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                videoIndexStatus: Common.Global.Enums.VideoIndexStatus.Pending);
+            SeedDefaultVideoIndexStatuses(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                videoIndexStatus: Common.Global.Enums.VideoIndexStatus.Processing);
+            SeedDefaultVideoIndexStatuses(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                videoIndexStatus: Common.Global.Enums.VideoIndexStatus.Processed);
+            SeedDefaultVideoVisibility(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                visibility: Common.Global.Enums.VideoVisibility.Public);
+            SeedDefaultVideoVisibility(fairplaytubeDatabaseContext: fairplaytubeDatabaseContext,
+                visibility: Common.Global.Enums.VideoVisibility.Private);
+        }
+
+        private void SeedDefaultVideoVisibility(FairplaytubeDatabaseContext fairplaytubeDatabaseContext,
+            Common.Global.Enums.VideoVisibility visibility)
+        {
+            var visibilityEntity = fairplaytubeDatabaseContext.VideoVisibility
+                .SingleOrDefault(p => p.Name == visibility.ToString());
+            if (visibilityEntity == null)
+            {
+                visibilityEntity = new VideoVisibility()
+                {
+                    VideoVisibilityId = (short)visibility,
+                    Name = visibility.ToString()
+                };
+                fairplaytubeDatabaseContext.Add(visibilityEntity);
+                fairplaytubeDatabaseContext.SaveChanges();
+            }
+        }
+
+        private void SeedDefaultVideoIndexStatuses(FairplaytubeDatabaseContext fairplaytubeDatabaseContext,
+            Common.Global.Enums.VideoIndexStatus videoIndexStatus)
+        {
+
+            var videoIndexStatusEntity = fairplaytubeDatabaseContext.VideoIndexStatus
+                .SingleOrDefault(p => p.Name == videoIndexStatus.ToString());
+            if (videoIndexStatusEntity == null)
+            {
+                videoIndexStatusEntity = new VideoIndexStatus()
+                {
+                    Name = videoIndexStatus.ToString(),
+                    VideoIndexStatusId = (short)videoIndexStatus
+                };
+                fairplaytubeDatabaseContext.VideoIndexStatus.Add(videoIndexStatusEntity);
+                fairplaytubeDatabaseContext.SaveChanges();
+            }
+        }
+
+        private void SeedDefaultRoles(FairplaytubeDatabaseContext fairplaytubeDatabaseContext,
+            short roleId, string roleName)
+        {
+            var roleEntity = fairplaytubeDatabaseContext.ApplicationRole
+                .SingleOrDefault(p => p.Name == roleName);
+            if (roleEntity == null)
+            {
+                roleEntity = new ApplicationRole()
+                {
+                    ApplicationRoleId = roleId,
+                    Name = roleName,
+                    Description = roleName
+                };
+                fairplaytubeDatabaseContext.ApplicationRole.Add(roleEntity);
+                fairplaytubeDatabaseContext.SaveChanges();
+            }
         }
     }
 }

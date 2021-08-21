@@ -1,11 +1,9 @@
-﻿using FairPlayTube.Client.ClientServices;
-using FairPlayTube.Client.Services;
+﻿using FairPlayTube.Client.Services;
+using FairPlayTube.ClientServices;
 using FairPlayTube.Models.Video;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FairPlayTube.Client.Pages.Users.Videos
@@ -14,7 +12,7 @@ namespace FairPlayTube.Client.Pages.Users.Videos
     [Authorize(Roles = Common.Global.Constants.Roles.User)]
     public partial class MyVideos
     {
-        public VideoInfoModel[] AllVideos { get; private set; }
+        private VideoInfoModel[] AllVideos { get; set; }
         [Inject]
         private VideoClientService VideoClientService { get; set; }
         [Inject]
@@ -41,17 +39,22 @@ namespace FairPlayTube.Client.Pages.Users.Videos
             }
         }
 
-        private async Task SelectVideo(VideoInfoModel videoInfoModel)
+        private async Task OnVideoDelete(VideoInfoModel videoModel)
         {
-            this.SelectedVideo = videoInfoModel;
-            this.SelectedVideo.EditAccessToken = await this.VideoClientService.GetVideoEditAccessToken(SelectedVideo.VideoId);
-            this.ShowModal = true;
-        }
-
-        private void CloseModal()
-        {
-            this.ShowModal = false;
-            this.SelectedVideo = null;
+            try
+            {
+                IsLoading = true;
+                await this.VideoClientService.DeleteVideoAsync(videoModel.VideoId);
+                this.AllVideos = await this.VideoClientService.GetMyProcessedVideos();
+            }
+            catch (Exception ex)
+            {
+                await this.ToastifyService.DisplayErrorNotification(ex.Message);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }

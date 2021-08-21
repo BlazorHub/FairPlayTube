@@ -22,6 +22,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[ApplicationUserFeature]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[ApplicationUserRole]",
          "ObjectType": 0
       },
@@ -38,11 +42,67 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[GatedFeature]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PaypalTransaction]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Person]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[UserExternalMonetization]",
          "ObjectType": 0
       },
       {
          "Name": "[dbo].[UserFeedback]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserFollower]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserInvitation]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserMessage]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserProfile]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[UserVideoRating]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoAccessTransaction]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoComment]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoCommentAnalysis]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoIndexingCost]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoIndexingMargin]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoIndexingTransaction]",
          "ObjectType": 0
       },
       {
@@ -56,9 +116,25 @@
       {
          "Name": "[dbo].[VideoInfo]",
          "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoJob]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoJobApplication]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VideoVisibility]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VisitorTracking]",
+         "ObjectType": 0
       }
    ],
-   "UiHint": "C:\\Projects\\Github\\FairPlayTube\\src\\FairPlayTubeSln\\FairPlayTube.Database\\FairPlayTube.Database.sqlproj",
+   "UiHint": "C:\\Users\\Federico Jose Lucia\\source\\repos\\PTICR\\FairPlayTube\\src\\FairPlayTubeSln\\FairPlayTube.Database\\FairPlayTube.Database.sqlproj",
    "UseBoolPropertiesWithoutDefaultSql": false,
    "UseDatabaseNames": false,
    "UseDbContextSplitting": false,

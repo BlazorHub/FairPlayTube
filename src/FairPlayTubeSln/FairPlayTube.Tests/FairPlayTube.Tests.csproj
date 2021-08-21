@@ -6,6 +6,12 @@
 		<IsPackable>false</IsPackable>
 
 		<UserSecretsId>74135dc8-e371-4439-8744-4493c94df36e</UserSecretsId>
+    <Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	  <WarningsAsErrors />
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,8 +27,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\FairPlayTube.ClientServices\FairPlayTube.ClientServices.csproj" />
 		<ProjectReference Include="..\FairPlayTube.Common\FairPlayTube.Common.csproj" />
+		<ProjectReference Include="..\FairPlayTube.Controllers\FairPlayTube.Controllers.csproj" />
 		<ProjectReference Include="..\FairPlayTube\FairPlayTube.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="appsettings.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

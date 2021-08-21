@@ -1,9 +1,6 @@
-﻿using FairPlayTube.Models.Video;
+﻿using FairPlayTube.Common.Interfaces;
+using FairPlayTube.Models.Video;
 using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FairPlayTube.Components.Videos
@@ -12,15 +9,27 @@ namespace FairPlayTube.Components.Videos
     {
         [Parameter]
         public VideoInfoModel[] AllVideos { get; set; }
+        [Parameter]
+        public bool AllowEdit { get; set; } = false;
+        [Parameter]
+        public bool AllowDelete { get; set; } = false;
+        [Parameter]
+        public EventCallback<VideoInfoModel> OnDelete { get; set; }
+        [Inject]
+        IVideoEditAccessTokenProvider VideoEditAccessTokenProvider { get; set; }
         private VideoInfoModel SelectedVideo { get; set; }
         private bool IsLoading { get; set; }
         private bool ShowInsights { get; set; }
         private bool ShowMonetizationLinks { get; set; }
         private bool ShowVideoDescription { get; set; }
 
-        private void SelectVideo(VideoInfoModel videoInfoModel)
+        private async Task SelectVideo(VideoInfoModel videoInfoModel)
         {
             this.SelectedVideo = videoInfoModel;
+            if (AllowEdit)
+            {
+                this.SelectedVideo.EditAccessToken = await this.VideoEditAccessTokenProvider.GetVideoEditAccessToken(videoInfoModel.VideoId);
+            }
             this.ShowInsights = true;
         }
 
@@ -52,5 +61,24 @@ namespace FairPlayTube.Components.Videos
             this.SelectedVideo = null;
             this.ShowVideoDescription = false;
         }
+
+        private string GetVideoInsightsUrl(VideoInfoModel model)
+        {
+            if (this.AllowEdit)
+            {
+                return model.PrivateInsightsUrl;
+            }
+            else
+            {
+                return model.PublicInsightsUrl;
+            }
+        }
+
+        private void ShowVideoPlayer(VideoInfoModel videoInfoModel)
+        {
+            videoInfoModel.ShowPlayerWidget = true;
+            StateHasChanged();
+        }
+   
     }
 }

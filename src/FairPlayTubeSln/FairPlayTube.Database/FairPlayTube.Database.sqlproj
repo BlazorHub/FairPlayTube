@@ -37,7 +37,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug\</OutputPath>
     <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -73,6 +73,25 @@
     <Build Include="dbo\Tables\UserExternalMonetization.sql" />
     <Build Include="dbo\Tables\BrandVideo.sql" />
     <Build Include="dbo\Tables\UserFeedback.sql" />
+    <Build Include="dbo\Tables\UserFollower.sql" />
+    <Build Include="dbo\Tables\UserInvitation.sql" />
+    <Build Include="dbo\Tables\UserVideoRating.sql" />
+    <Build Include="dbo\Tables\UserProfile.sql" />
+    <Build Include="dbo\Tables\UserMessage.sql" />
+    <Build Include="dbo\Tables\VideoIndexingCost.sql" />
+    <Build Include="dbo\Tables\VideoIndexingTransaction.sql" />
+    <Build Include="dbo\Tables\VideoIndexingMargin.sql" />
+    <Build Include="dbo\Tables\VideoAccessTransaction.sql" />
+    <Build Include="dbo\Tables\PaypalTransaction.sql" />
+    <Build Include="dbo\Tables\VisitorTracking.sql" />
+    <Build Include="dbo\Tables\VideoJob.sql" />
+    <Build Include="dbo\Tables\VideoComment.sql" />
+    <Build Include="dbo\Tables\VideoJobApplication.sql" />
+    <Build Include="dbo\Tables\Person.sql" />
+    <Build Include="dbo\Tables\VideoVisibility.sql" />
+    <Build Include="dbo\Tables\VideoCommentAnalysis.sql" />
+    <Build Include="dbo\Tables\GatedFeature.sql" />
+    <Build Include="dbo\Tables\ApplicationUserFeature.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\PostDeployment\Script.PostDeployment.sql" />

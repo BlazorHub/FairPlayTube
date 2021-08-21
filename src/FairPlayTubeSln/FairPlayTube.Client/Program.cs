@@ -1,16 +1,15 @@
-using FairPlayTube.Client.ClientServices;
 using FairPlayTube.Client.CustomClaims;
+using FairPlayTube.Client.CustomProviders;
 using FairPlayTube.Client.Services;
+using FairPlayTube.ClientServices;
 using FairPlayTube.Common.Configuration;
+using FairPlayTube.Common.Interfaces;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FairPlayTube.Client
@@ -51,12 +50,15 @@ namespace FairPlayTube.Client
                 builder.Configuration.GetSection("AzureQnABotConfiguration").Get<AzureQnABotConfiguration>();
             builder.Services.AddSingleton(azureQnABotConfiguration);
 
+            builder.Services.AddTransient<IVideoEditAccessTokenProvider, VideoEditAccessTokenProvider>();
+
             builder.Services.AddTransient<HttpClientService>();
             builder.Services.AddTransient<ToastifyService>();
             builder.Services.AddTransient<VideoClientService>();
             builder.Services.AddTransient<UserProfileClientService>();
             builder.Services.AddTransient<ToastifyService>();
-
+            builder.Services.AddTransient<VisitorTrackingClientService>();
+            builder.Services.AddTransient<UserClientService>();
             await builder.Build().RunAsync();
         }
     }

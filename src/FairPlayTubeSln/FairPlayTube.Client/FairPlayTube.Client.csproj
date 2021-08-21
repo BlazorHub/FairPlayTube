@@ -6,18 +6,30 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ClientServices\**" />
+    <Content Remove="ClientServices\**" />
+    <EmbeddedResource Remove="ClientServices\**" />
+    <None Remove="ClientServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web.Extensions" Version="5.0.0-preview9.20513.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.5" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.7" />
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="5.0.6" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
+    <PackageReference Include="Toolbelt.Blazor.TwitterShareButton" Version="7.0.0.31" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FairPlayTube.ClientServices\FairPlayTube.ClientServices.csproj" />
     <ProjectReference Include="..\FairPlayTube.Common\FairPlayTube.Common.csproj" />
     <ProjectReference Include="..\FairPlayTube.Components\FairPlayTube.Components.csproj" />
     <ProjectReference Include="..\FairPlayTube.Models\FairPlayTube.Models.csproj" />

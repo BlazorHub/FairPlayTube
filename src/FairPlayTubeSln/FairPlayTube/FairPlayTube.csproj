@@ -12,13 +12,19 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <DocumentationFile>FairPlayTube.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.2.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.6" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="4.4.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.8" />
+    <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="2.3.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="1.1.0" />
-    <PackageReference Include="PTI.Microservices.Library" Version="1.0.3.10-preview" />
-    <PackageReference Include="PTI.Microservices.Library.Models" Version="1.0.3.10-preview" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
   </ItemGroup>
@@ -26,10 +32,15 @@
   <ItemGroup>
     <ProjectReference Include="..\FairPlayTube.Client\FairPlayTube.Client.csproj" />
     <ProjectReference Include="..\FairPlayTube.Components\FairPlayTube.Components.csproj" />
+    <ProjectReference Include="..\FairPlayTube.Controllers\FairPlayTube.Controllers.csproj" />
     <ProjectReference Include="..\FairPlayTube.DataAccess\FairPlayTube.DataAccess.csproj" />
     <ProjectReference Include="..\FairPlayTube.Models\FairPlayTube.Models.csproj" />
     <ProjectReference Include="..\FairPlayTube.Notifications\FairPlayTube.Notifications.csproj" />
     <ProjectReference Include="..\FairPlayTube.Services\FairPlayTube.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="GatedFeatures\SessionManagers\" />
   </ItemGroup>
 
 </Project>

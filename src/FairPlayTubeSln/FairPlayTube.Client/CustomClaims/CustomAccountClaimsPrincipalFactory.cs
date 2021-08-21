@@ -1,11 +1,8 @@
-﻿using FairPlayTube.Client.ClientServices;
+﻿using FairPlayTube.ClientServices;
 using FairPlayTube.Common.Extensions;
 using FairPlayTube.Common.Global;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 

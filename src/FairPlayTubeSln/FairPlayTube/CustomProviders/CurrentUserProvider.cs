@@ -1,9 +1,6 @@
 ﻿using FairPlayTube.Common.Interfaces;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace FairPlayTube.CustomProviders
 {
@@ -41,6 +38,10 @@ namespace FairPlayTube.CustomProviders
             }
         }
 
+        /// <summary>
+        /// Gets the Logged In User Azure Ad B2C Object Id
+        /// </summary>
+        /// <returns></returns>
         public string GetObjectId()
         {
             var user = this.HttpContextAccessor.HttpContext.User;

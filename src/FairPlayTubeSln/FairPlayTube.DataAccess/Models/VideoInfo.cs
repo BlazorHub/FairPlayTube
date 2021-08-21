@@ -14,7 +14,12 @@ namespace FairPlayTube.DataAccess.Models
         public VideoInfo()
         {
             BrandVideo = new HashSet<BrandVideo>();
+            VideoAccessTransaction = new HashSet<VideoAccessTransaction>();
+            VideoComment = new HashSet<VideoComment>();
             VideoIndexKeyword = new HashSet<VideoIndexKeyword>();
+            VideoIndexingTransaction = new HashSet<VideoIndexingTransaction>();
+            VideoJob = new HashSet<VideoJob>();
+            VideoJobApplication = new HashSet<VideoJobApplication>();
         }
 
         [Key]
@@ -48,6 +53,24 @@ namespace FairPlayTube.DataAccess.Models
         public string VideoIndexSourceClass { get; set; }
         [Column(TypeName = "money")]
         public decimal Price { get; set; }
+        [StringLength(500)]
+        public string ExternalVideoSourceUrl { get; set; }
+        [StringLength(10)]
+        public string VideoLanguageCode { get; set; }
+        public short VideoVisibilityId { get; set; }
+        [StringLength(500)]
+        public string ThumbnailUrl { get; set; }
+        public DateTimeOffset RowCreationDateTime { get; set; }
+        [Required]
+        [StringLength(256)]
+        public string RowCreationUser { get; set; }
+        [Required]
+        [StringLength(250)]
+        public string SourceApplication { get; set; }
+        [Required]
+        [Column("OriginatorIPAddress")]
+        [StringLength(100)]
+        public string OriginatorIpaddress { get; set; }
 
         [ForeignKey(nameof(ApplicationUserId))]
         [InverseProperty("VideoInfo")]
@@ -55,9 +78,24 @@ namespace FairPlayTube.DataAccess.Models
         [ForeignKey(nameof(VideoIndexStatusId))]
         [InverseProperty("VideoInfo")]
         public virtual VideoIndexStatus VideoIndexStatus { get; set; }
+        [ForeignKey(nameof(VideoVisibilityId))]
+        [InverseProperty("VideoInfo")]
+        public virtual VideoVisibility VideoVisibility { get; set; }
+        [InverseProperty("VideoInfo")]
+        public virtual UserVideoRating UserVideoRating { get; set; }
         [InverseProperty("VideoInfo")]
         public virtual ICollection<BrandVideo> BrandVideo { get; set; }
         [InverseProperty("VideoInfo")]
+        public virtual ICollection<VideoAccessTransaction> VideoAccessTransaction { get; set; }
+        [InverseProperty("VideoInfo")]
+        public virtual ICollection<VideoComment> VideoComment { get; set; }
+        [InverseProperty("VideoInfo")]
         public virtual ICollection<VideoIndexKeyword> VideoIndexKeyword { get; set; }
+        [InverseProperty("VideoInfo")]
+        public virtual ICollection<VideoIndexingTransaction> VideoIndexingTransaction { get; set; }
+        [InverseProperty("VideoInfo")]
+        public virtual ICollection<VideoJob> VideoJob { get; set; }
+        [InverseProperty("VideoInfo")]
+        public virtual ICollection<VideoJobApplication> VideoJobApplication { get; set; }
     }
 }

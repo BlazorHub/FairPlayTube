@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FairPlayTube</name>
+    </assembly>
+    <members>
+        <member name="T:FairPlayTube.AutoMapperProfiles.GlobalMappingProfile">
+            <summary>
+            Configures the Automapper mapping
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.AutoMapperProfiles.GlobalMappingProfile.#ctor">
+            <summary>
+            Initializes <see cref="T:FairPlayTube.AutoMapperProfiles.GlobalMappingProfile"/>
+            </summary>
+        </member>
+        <member name="T:FairPlayTube.CustomProviders.CurrentUserProvider">
+            <summary>
+            Holds the logic to retrieve the current user's information
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.CustomProviders.CurrentUserProvider.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor)">
+            <summary>
+            Creates a new instance of <see cref="T:FairPlayTube.CustomProviders.CurrentUserProvider"/>
+            </summary>
+            <param name="httpContextAccessor"></param>
+        </member>
+        <member name="M:FairPlayTube.CustomProviders.CurrentUserProvider.GetUsername">
+            <summary>
+            Retrieves the user's username
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:FairPlayTube.CustomProviders.CurrentUserProvider.GetObjectId">
+            <summary>
+            Gets the Logged In User Azure Ad B2C Object Id
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:FairPlayTube.GatedFeatures.FeatureFilters.PaidFeatureFilter">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.GatedFeatures.FeatureFilters.PaidFeatureFilter.#ctor(Microsoft.AspNetCore.Mvc.Infrastructure.IActionContextAccessor,FairPlayTube.Common.Interfaces.ICurrentUserProvider,FairPlayTube.DataAccess.Data.FairplaytubeDatabaseContext)">
+            <summary>
+            
+            </summary>
+            <param name="actionContextAccessor"></param>
+            <param name="currentUserProvider"></param>
+            <param name="fairplaytubeDatabase"></param>
+        </member>
+        <member name="M:FairPlayTube.GatedFeatures.FeatureFilters.PaidFeatureFilter.EvaluateAsync(Microsoft.FeatureManagement.FeatureFilterEvaluationContext)">
+            <summary>
+            
+            </summary>
+            <param name="context"></param>
+            <returns></returns>
+        </member>
+        <member name="T:FairPlayTube.Pages.ErrorModel">
+            <summary>
+            Error Model
+            </summary>
+        </member>
+        <member name="P:FairPlayTube.Pages.ErrorModel.RequestId">
+            <summary>
+            Request Id
+            </summary>
+        </member>
+        <member name="P:FairPlayTube.Pages.ErrorModel.ShowRequestId">
+            <summary>
+            Show Request Id
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.Pages.ErrorModel.#ctor(Microsoft.Extensions.Logging.ILogger{FairPlayTube.Pages.ErrorModel})">
+            <summary>
+            Initialized <see cref="T:FairPlayTube.Pages.ErrorModel"/>
+            </summary>
+            <param name="logger"></param>
+        </member>
+        <member name="M:FairPlayTube.Pages.ErrorModel.OnGet">
+            <summary>
+            OnGet
+            </summary>
+        </member>
+        <member name="T:FairPlayTube.Program">
+            <summary>
+            Application Entryy class
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.Program.Main(System.String[])">
+            <summary>
+            Application entry method
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:FairPlayTube.Program.CreateHostBuilder(System.String[])">
+            <summary>
+            Initializes the Host Builder
+            </summary>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="T:FairPlayTube.Startup">
+            <summary>
+            Used to configure system's startup
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.Startup.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Initialized <see cref="T:FairPlayTube.Startup"/>
+            </summary>
+            <param name="configuration"></param>
+        </member>
+        <member name="P:FairPlayTube.Startup.Configuration">
+            <summary>
+            Represents the system's initial/startup configuration
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configures the System Services
+            </summary>
+            <param name="services"></param>
+        </member>
+        <member name="M:FairPlayTube.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            <summary>
+            Configure the Application Behavior and pipleline execution
+            </summary>
+            <param name="app"></param>
+            <param name="env"></param>
+        </member>
+        <member name="T:FairPlayTube.Swagger.Filters.SecurityRequirementsOperationFilter">
+            <summary>
+            Used to add the required configuration to be able to use Swagger UI with Authentcation
+            </summary>
+        </member>
+        <member name="M:FairPlayTube.Swagger.Filters.SecurityRequirementsOperationFilter.Apply(Microsoft.OpenApi.Models.OpenApiOperation,Swashbuckle.AspNetCore.SwaggerGen.OperationFilterContext)">
+            <summary>
+            Applies the this filter on swagger documentation generation.
+            </summary>
+            <param name="operation"></param>
+            <param name="context"></param>
+        </member>
+    </members>
+</doc>

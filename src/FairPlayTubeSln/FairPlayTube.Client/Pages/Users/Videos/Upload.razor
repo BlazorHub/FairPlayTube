@@ -1,34 +1,62 @@
 ﻿<h3>Upload</h3>
 
+<VisitorTracking></VisitorTracking>
 <Loading IsLoading="IsLoading"></Loading>
 
 <EditForm Model="@UploadVideoModel" OnValidSubmit="OnValidSubmit">
     <DataAnnotationsValidator></DataAnnotationsValidator>
+    <FairPlayTube.Client.CustomValidators.UploadVideoValidator></FairPlayTube.Client.CustomValidators.UploadVideoValidator>
     <ValidationSummary></ValidationSummary>
     <div class="mb-3">
         <label class="form-label">Name</label>
         <InputText class="form-control" @bind-Value="UploadVideoModel.Name"></InputText>
     </div>
     <div class="mb-3">
-        <label class="form-label">FileName</label>
-        <InputText class="form-control" @bind-Value="UploadVideoModel.FileName"></InputText>
+        <label class="form-label">Use Url?</label>
+        <InputCheckbox @bind-Value="UploadVideoModel.UseSourceUrl"  @onchange="OnFileSourceModeChanged"></InputCheckbox>
     </div>
     <div class="mb-3">
-        <label class="form-label">FileUrl</label>
-        <InputText class="form-control" @bind-Value="UploadVideoModel.SourceUrl" @oninput="OnSourceUrlChanged"></InputText>
+        @if (UploadVideoModel.UseSourceUrl)
+        {
+            <label class="form-label">Source Url</label>
+            <InputText class="form-control" @bind-Value="UploadVideoModel.SourceUrl"></InputText>
+        }
+        else
+        {
+            <FairPlayTube.Client.CustomComponents.Upload.FileUpload 
+                                                                    OnFilesUploaded="OnFilesUploaded"
+                                                                    ></FairPlayTube.Client.CustomComponents.Upload.FileUpload>
+        }
+
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Video's Language</label>
+        <InputSelect class="form-control" @bind-Value="UploadVideoModel.Language">
+            @foreach (var singleLanguage in AvailableLanguages)
+            {
+                <option value="@singleLanguage.Value">@singleLanguage.Name</option>
+            }
+        </InputSelect>
     </div>
     <div class="mb-3">
         <label class="form-label">Description</label>
-        <InputText class="form-control" @bind-Value="UploadVideoModel.Description"></InputText>
+        <InputTextArea class="form-control" @bind-Value="UploadVideoModel.Description" 
+                       rows="4" cols="50" maxlength="500"></InputTextArea>
     </div>
-    @if (!this.IsSubmitting)
-    {
-        <div class="mb-3">
-            <label class="form-label">Video File</label>
-            <InputFile class="form-control" OnChange="OnVideoFileSelectedAsync" accept="video/*"></InputFile>
-        </div>
-    }
-    <UploadVideoModelValidator></UploadVideoModelValidator>
+    <div class="mb-3">
+        <label class="form-label">Price (@Common.Global.Constants.CurrencySymbols.Dollars) - (@Constants.PriceLimits.MinVideoPrice, @Constants.PriceLimits.MaxVideoPrice)</label>
+        <InputNumber class="form-control" @bind-Value="UploadVideoModel.Price"
+                     ParsingErrorMessage="The Price must be a valid integer number"></InputNumber>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Visibility</label>
+        <InputSelect class="form-control" @bind-Value="UploadVideoModel.VideoVisibility">
+            @foreach (var singleValue in Enum.GetValues<Common.Global.Enums.VideoVisibility>())
+            {
+                <option value="@singleValue">@GetVisibilityName(singleValue)</option>
+            }
+        </InputSelect>
+    </div>
     @if (!IsSubmitting)
     {
         <div class="mb-3">
